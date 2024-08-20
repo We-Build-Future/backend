@@ -3,6 +3,7 @@ package app
 import (
 	"backend/pkg/config"
 	"backend/pkg/infra/storage/db"
+	"backend/pkg/protocol"
 	"backend/registry"
 	"context"
 	"database/sql"
@@ -20,7 +21,6 @@ type Server struct {
 }
 
 func NewServer(isStandaloneMode bool) (*Server, error) {
-
 	cfg, err := config.FromEnv()
 	if err != nil {
 		return nil, err
@@ -31,7 +31,19 @@ func NewServer(isStandaloneMode bool) (*Server, error) {
 		return nil, err
 	}
 
-	services := registry.NewServiceRegistry()
+	restServer := protocol.NewServer(&protocol.Dependencies{
+		Cfg: cfg,
+	}, cfg)
+
+	services := registry.NewServiceRegistry(
+		restServer.Run,
+	)
+
+	if isStandaloneMode {
+		services = registry.NewServiceRegistry(
+			restServer.Run,
+		)
+	}
 
 	return &Server{
 		postgresDB: postgresDB,
