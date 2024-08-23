@@ -1,7 +1,8 @@
-package db
+package postgres
 
 import (
-	"database/sql"
+	"backend/pkg/infra/storage/db"
+	"backend/pkg/infra/storage/db/dbimpl"
 
 	"go.uber.org/zap"
 	"gorm.io/driver/postgres"
@@ -10,10 +11,14 @@ import (
 
 type postgresDB struct {
 	log *zap.Logger
-	db  *sql.DB
+	db.DB
 }
 
-func New(connection string) (*sql.DB, error) {
+type DB interface {
+	db.DB
+}
+
+func New(connection string) (DB, error) {
 	p := &postgresDB{
 		log: zap.L().Named("postgres"),
 	}
@@ -30,7 +35,7 @@ func New(connection string) (*sql.DB, error) {
 		return nil, err
 	}
 
-	p.db = gdb
+	p.DB = dbimpl.NewSQL(gdb)
 
-	return p.db, nil
+	return p, nil
 }
