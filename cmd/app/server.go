@@ -2,11 +2,10 @@ package app
 
 import (
 	"backend/pkg/config"
-	"backend/pkg/infra/storage/db"
+	"backend/pkg/infra/registry"
+	"backend/pkg/infra/storage/postgres"
 	"backend/pkg/protocol"
-	"backend/registry"
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
 	"sync"
@@ -15,7 +14,7 @@ import (
 )
 
 type Server struct {
-	postgresDB *sql.DB
+	postgresDB postgres.DB
 	services   []registry.RunFunc
 	log        *zap.Logger
 }
@@ -26,7 +25,7 @@ func NewServer(isStandaloneMode bool) (*Server, error) {
 		return nil, err
 	}
 
-	postgresDB, err := db.New(cfg.Postgres.GetConnectionString())
+	postgresDB, err := postgres.New(cfg.Postgres.GetConnectionString())
 	if err != nil {
 		return nil, err
 	}
