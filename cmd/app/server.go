@@ -2,6 +2,7 @@ package app
 
 import (
 	"backend/pkg/config"
+	"backend/pkg/identity/market/marketimpl"
 	"backend/pkg/infra/registry"
 	"backend/pkg/infra/storage/postgres"
 	"backend/pkg/protocol"
@@ -30,8 +31,12 @@ func NewServer(isStandaloneMode bool) (*Server, error) {
 		return nil, err
 	}
 
+	marketSvc := marketimpl.NewService(postgresDB)
+
 	restServer := protocol.NewServer(&protocol.Dependencies{
 		Cfg: cfg,
+
+		MarketSvc: marketSvc,
 	}, cfg)
 
 	services := registry.NewServiceRegistry(

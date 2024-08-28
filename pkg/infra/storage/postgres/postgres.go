@@ -4,6 +4,7 @@ import (
 	"backend/pkg/infra/storage/db"
 	"backend/pkg/infra/storage/db/dbimpl"
 
+	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -35,7 +36,7 @@ func New(connection string) (DB, error) {
 		return nil, err
 	}
 
-	p.DB = dbimpl.NewSQL(gdb)
+	p.DB = dbimpl.NewSQL(sqlx.NewDb(gdb, gormPostgresDB.Dialector.Name()))
 
 	return p, nil
 }

@@ -2,6 +2,7 @@ package protocol
 
 import (
 	"backend/pkg/config"
+	"backend/pkg/identity/market"
 	"context"
 	"fmt"
 	"time"
@@ -20,6 +21,8 @@ type Server struct {
 
 type Dependencies struct {
 	Cfg *config.Config
+
+	MarketSvc market.Service
 }
 
 func NewServer(deps *Dependencies, cfg *config.Config) *Server {
@@ -33,8 +36,9 @@ func NewServer(deps *Dependencies, cfg *config.Config) *Server {
 }
 
 func (s *Server) registerRoutes() {
-	// r := s.Router.Group("/api")
+	r := s.Router
 
+	s.NewMarketHandler(r)
 }
 
 func (s *Server) Run(ctx context.Context) error {
