@@ -17,5 +17,6 @@
 
 cmd/**/__*
 go.mod
+go.sum
 
 ./build/VERSION
