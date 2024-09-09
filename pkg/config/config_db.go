@@ -10,7 +10,7 @@ const (
 	defaultDBPort     = "5432"
 	defaultDBUser     = "postgres"
 	defaultDBPassword = "secret"
-	defaultDBName     = "identityDB"
+	defaultDBName     = "identity"
 )
 
 type PostgresConfig struct {

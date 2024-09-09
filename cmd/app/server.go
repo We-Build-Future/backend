@@ -3,6 +3,7 @@ package app
 import (
 	"backend/pkg/config"
 	"backend/pkg/identity/market/marketimpl"
+	"backend/pkg/identity/storage"
 	"backend/pkg/infra/registry"
 	"backend/pkg/infra/storage/postgres"
 	"backend/pkg/protocol"
@@ -26,7 +27,7 @@ func NewServer(isStandaloneMode bool) (*Server, error) {
 		return nil, err
 	}
 
-	postgresDB, err := postgres.New(cfg.Postgres.GetConnectionString())
+	postgresDB, err := postgres.New(storage.New(), cfg.Postgres.GetConnectionString())
 	if err != nil {
 		return nil, err
 	}
