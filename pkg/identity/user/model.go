@@ -23,10 +23,10 @@ type User struct {
 	LastName   string  `db:"last_name" json:"last_name"`
 	MiddleName *string `db:"middle_name" json:"middle_name"`
 	LoginName  string  `db:"login_name" json:"login_name"`
-	Password   string  `db:"password" json:"password"`
+	Password   string  `db:"password" json:"-"`
 	Status     Status  `db:"status" json:"status"`
 	Email      *string `db:"email" json:"email"`
-	Salt       string  `db:"salt" json:"salt"`
+	Salt       string  `db:"salt" json:"-"`
 	CreatedBy  string  `db:"created_by" json:"created_by"`
 	CreatedAt  string  `db:"created_at" json:"created_at"`
 	UpdatedBy  *string `db:"updated_by" json:"updated_by"`
