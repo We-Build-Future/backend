@@ -24,11 +24,11 @@ func newStore(db db.DB) *store {
 
 func (s *store) create(ctx context.Context, entity *user.User) error {
 	rawSQL := `
-		INSERT INTO user(
+		INSERT INTO "user"(
 			uuid,
 			first_name,
 			last_name,
-			middle,
+			middle_name,
 			login_name,
 			password,
 			status,
@@ -41,7 +41,7 @@ func (s *store) create(ctx context.Context, entity *user.User) error {
 			:uuid,
 			:first_name,
 			:last_name,
-			:middle,
+			:middle_name,
 			:login_name,
 			:password,
 			:status,
@@ -73,7 +73,7 @@ func (s *store) search(ctx context.Context, query *user.SearchUserQuery) (*user.
 	sql.WriteString(`
 		SELECT
 			*
-		FROM user
+		FROM "user"
 	`)
 
 	if len(whereConditions) > 0 {
@@ -82,15 +82,15 @@ func (s *store) search(ctx context.Context, query *user.SearchUserQuery) (*user.
 
 	sql.WriteString(" ORDER BY created_at DESC")
 
+	count, err := s.getCount(ctx, sql, whereParams)
+	if err != nil {
+		return nil, err
+	}
+
 	if query.PerPage > 0 {
 		offset := query.PerPage * (query.Page - 1)
 		sql.WriteString(" LIMIT ? OFFSET ?")
 		whereParams = append(whereParams, query.PerPage, offset)
-	}
-
-	count, err := s.getCount(ctx, sql, whereParams)
-	if err != nil {
-		return nil, err
 	}
 
 	err = s.db.Select(ctx, &result.Users, sql.String(), whereParams...)
