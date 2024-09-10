@@ -5,6 +5,7 @@ import (
 	"backend/pkg/identity/user"
 	"backend/pkg/infra/storage/db"
 	"context"
+	"fmt"
 	"time"
 
 	"go.uber.org/zap"
@@ -28,7 +29,17 @@ func NewService(db db.DB, cfg *config.Config) user.Service {
 
 func (s *service) Create(ctx context.Context, cmd *user.CreateUserCommand) error {
 	now := time.Now().Format(time.RFC3339Nano)
-	err := s.store.create(ctx, &user.User{
+
+	exist, err := s.store.isUserTaken(ctx, cmd.LoginName)
+	if err != nil {
+		return err
+	}
+
+	if exist {
+		return fmt.Errorf("user with login name %s already exists", cmd.LoginName)
+	}
+
+	err = s.store.create(ctx, &user.User{
 		UUID:       cmd.UUID,
 		FirstName:  cmd.FirstName,
 		LastName:   cmd.LastName,
@@ -64,6 +75,19 @@ func (s *service) Search(ctx context.Context, query *user.SearchUserQuery) (*use
 
 	result.Page = query.Page
 	result.PerPage = query.PerPage
+
+	return result, nil
+}
+
+func (s *service) GetByID(ctx context.Context, id int64) (*user.User, error) {
+	result, err := s.store.getByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if result == nil {
+		return nil, fmt.Errorf("user with id %d not found", id)
+	}
 
 	return result, nil
 }

@@ -5,6 +5,8 @@ import (
 	"backend/pkg/infra/storage/db"
 	"bytes"
 	"context"
+	"database/sql"
+	"errors"
 	"strings"
 
 	"go.uber.org/zap"
@@ -60,6 +62,29 @@ func (s *store) create(ctx context.Context, entity *user.User) error {
 	return nil
 }
 
+func (s *store) isUserTaken(ctx context.Context, loginName string) (bool, error) {
+	var result string
+
+	rawSQL := `
+		SELECT
+			login_name
+		FROM "user"
+		WHERE 
+			login_name = ?
+	`
+
+	err := s.db.Get(ctx, &result, rawSQL, loginName)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return false, nil
+		}
+
+		return false, err
+	}
+
+	return true, nil
+}
+
 func (s *store) search(ctx context.Context, query *user.SearchUserQuery) (*user.SearchUserResult, error) {
 	var (
 		result = &user.SearchUserResult{
@@ -112,4 +137,40 @@ func (s *store) getCount(ctx context.Context, sql bytes.Buffer, whereParams []in
 	}
 
 	return count, nil
+}
+
+func (s *store) getByID(ctx context.Context, id int64) (*user.User, error) {
+	var result user.User
+
+	rawSQL := `
+		SELECT 
+			id,
+			uuid,
+			first_name,
+			middle_name,
+			last_name,
+			login_name,
+			password,
+			status,
+			email,
+			salt,
+			created_by,
+			created_at,
+			updated_by,
+			updated_at
+		FROM "user"
+		WHERE
+			id = ?
+	`
+
+	err := s.db.Get(ctx, &result, rawSQL, id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+
+		return nil, err
+	}
+
+	return &result, nil
 }
