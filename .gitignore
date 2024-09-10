@@ -16,7 +16,5 @@
 *__debug_bin
 
 cmd/**/__*
-go.sum
-go.mod
 
 ./build/VERSION

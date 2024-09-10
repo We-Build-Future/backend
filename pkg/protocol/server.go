@@ -2,7 +2,8 @@ package protocol
 
 import (
 	"backend/pkg/config"
-	"backend/pkg/identity/market"
+	"backend/pkg/identity/user"
+	"backend/pkg/infra/storage/db"
 	"context"
 	"fmt"
 	"time"
@@ -20,9 +21,10 @@ type Server struct {
 }
 
 type Dependencies struct {
-	Cfg *config.Config
+	Postgres db.DB
+	Cfg      *config.Config
 
-	MarketSvc market.Service
+	UserSvc user.Service
 }
 
 func NewServer(deps *Dependencies, cfg *config.Config) *Server {
@@ -38,7 +40,7 @@ func NewServer(deps *Dependencies, cfg *config.Config) *Server {
 func (s *Server) registerRoutes() {
 	r := s.Router
 
-	s.NewMarketHandler(r)
+	s.NewUserHandler(r)
 }
 
 func (s *Server) Run(ctx context.Context) error {
