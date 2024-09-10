@@ -57,6 +57,27 @@ type SearchUserResult struct {
 	PerPage    int     `json:"per_page"`
 }
 
+type UpdateUserCommand struct {
+	ID         int64
+	FirstName  string  `json:"first_name"`
+	LastName   string  `json:"last_name"`
+	MiddleName *string `json:"middle_name"`
+}
+
+type UpdateStatusCommand struct {
+	ID     int64
+	Status Status `json:"status"`
+}
+
+type UpdatePasswordCommand struct {
+	ID       int64
+	Password string `json:"password"`
+}
+
+type ForgotPasswordCommand struct {
+	Email string `json:"email"`
+}
+
 func (cmd *CreateUserCommand) Validate() error {
 	if len(cmd.LoginName) == 0 {
 		return errors.New("login name is required")
@@ -80,6 +101,63 @@ func (cmd *CreateUserCommand) Validate() error {
 
 	cmd.UUID = uuid.New().String()
 	cmd.Salt = generator.GenerateUniqueString(32)
+
+	return nil
+}
+
+func (cmd *UpdateUserCommand) Validate() error {
+	if cmd.ID <= 0 {
+		return errors.New("id is required")
+	}
+
+	if len(cmd.FirstName) == 0 {
+		return errors.New("first name is required")
+	}
+
+	if len(cmd.LastName) == 0 {
+		return errors.New("last name is required")
+	}
+
+	return nil
+}
+
+func (cmd *UpdateStatusCommand) Validate() error {
+	if cmd.ID <= 0 {
+		return errors.New("id is required")
+	}
+
+	err := cmd.Status.Validate()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (cmd *UpdatePasswordCommand) Validate() error {
+	if cmd.ID <= 0 {
+		return errors.New("id is required")
+	}
+
+	if len(cmd.Password) == 0 {
+		return errors.New("password is required")
+	}
+
+	return nil
+}
+
+func (cmd *ForgotPasswordCommand) Validate() error {
+	if len(cmd.Email) == 0 {
+		return errors.New("email is required")
+	}
+
+	return nil
+}
+
+func (s Status) Validate() error {
+	if s < Pending || s > Deleted {
+		return errors.New("invalid status")
+	}
 
 	return nil
 }
