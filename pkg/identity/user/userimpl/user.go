@@ -91,3 +91,71 @@ func (s *service) GetByID(ctx context.Context, id int64) (*user.User, error) {
 
 	return result, nil
 }
+
+func (s *service) Update(ctx context.Context, cmd *user.UpdateUserCommand) error {
+	now := time.Now().Format(time.RFC3339Nano)
+
+	result, err := s.store.getByID(ctx, cmd.ID)
+	if err != nil {
+		return err
+	}
+
+	if result == nil {
+		return fmt.Errorf("user with id %d not found", cmd.ID)
+	}
+
+	err = s.store.update(ctx, &user.User{
+		ID:         cmd.ID,
+		FirstName:  cmd.FirstName,
+		LastName:   cmd.LastName,
+		MiddleName: cmd.MiddleName,
+		UpdatedAt:  &now,
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *service) UpdateStatus(ctx context.Context, cmd *user.UpdateStatusCommand) error {
+	now := time.Now().Format(time.RFC3339Nano)
+
+	exist, err := s.GetByID(ctx, cmd.ID)
+	if err != nil {
+		return err
+	}
+
+	err = s.store.updateStatus(ctx, &user.User{
+		ID:        exist.ID,
+		Status:    cmd.Status,
+		UpdatedAt: &now,
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *service) UpdatePassword(ctx context.Context, cmd *user.UpdatePasswordCommand) error {
+	now := time.Now().Format(time.RFC3339Nano)
+
+	exist, err := s.GetByID(ctx, cmd.ID)
+	if err != nil {
+		return err
+	}
+
+	err = s.store.updatePassword(ctx, &user.User{
+		ID:        exist.ID,
+		Password:  cmd.Password,
+		UpdatedAt: &now,
+	})
+
+	return nil
+}
+
+func (s *service) ForgotPassword(ctx context.Context, cmd *user.ForgotPasswordCommand) error {
+
+	return nil
+}

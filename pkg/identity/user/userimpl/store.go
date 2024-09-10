@@ -174,3 +174,62 @@ func (s *store) getByID(ctx context.Context, id int64) (*user.User, error) {
 
 	return &result, nil
 }
+
+func (s *store) update(ctx context.Context, entity *user.User) error {
+	rawSQL := `
+		UPDATE "user"
+		SET
+			first_name = :first_name,
+			middle_name = :middle_name,
+			last_name = :last_name,
+			updated_by = :updated_by,
+			updated_at = :updated_at
+		WHERE
+			id = :id
+	`
+
+	_, err := s.db.NamedExec(ctx, rawSQL, entity)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *store) updateStatus(ctx context.Context, entity *user.User) error {
+	rawSQL := `
+		UPDATE "user"
+		SET
+			status = :status,
+			updated_by = :updated_by,
+			updated_at = :updated_at
+		WHERE
+			id = :id
+	`
+
+	_, err := s.db.NamedExec(ctx, rawSQL, entity)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *store) updatePassword(ctx context.Context, entity *user.User) error {
+	rawSQL := `
+		UPDATE "user"
+		SET
+			password = :password,
+			updated_by = :updated_by,
+			updated_at = :updated_at
+		WHERE
+			id = :id
+	`
+
+	_, err := s.db.NamedExec(ctx, rawSQL, entity)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

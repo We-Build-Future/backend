@@ -13,6 +13,9 @@ func (s *Server) NewUserHandler(r *fiber.App) {
 	admin.Post("/", s.createUser)
 	admin.Get("/", s.searchUser)
 	admin.Get("/:id", s.getUserDetail)
+	admin.Put("/:id", s.updateUser)
+	admin.Put("/:id/status", s.updateStatus)
+	admin.Put("/:id/password", s.updatePassword)
 }
 
 func (s *Server) createUser(c *fiber.Ctx) error {
@@ -71,4 +74,93 @@ func (s *Server) getUserDetail(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(result)
+}
+
+func (s *Server) updateUser(c *fiber.Ctx) error {
+	var cmd user.UpdateUserCommand
+
+	idStr := c.Params("id")
+
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "id is not valid")
+	}
+
+	err = c.BodyParser(&cmd)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+
+	cmd.ID = id
+	err = cmd.Validate()
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+
+	err = s.Dependencies.UserSvc.Update(c.Context(), &cmd)
+	if err != nil {
+		return err
+	}
+
+	return c.SendString("Updated successfully")
+}
+
+func (s *Server) updateStatus(c *fiber.Ctx) error {
+	var cmd user.UpdateStatusCommand
+
+	idStr := c.Params("id")
+
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "id is not valid")
+	}
+
+	err = c.BodyParser(&cmd)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+
+	cmd.ID = id
+
+	err = cmd.Validate()
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+
+	err = s.Dependencies.UserSvc.UpdateStatus(c.Context(), &cmd)
+	if err != nil {
+		return err
+	}
+
+	return c.SendString("Updated successfully")
+}
+
+func (s *Server) updatePassword(c *fiber.Ctx) error {
+	var cmd user.UpdatePasswordCommand
+
+	idStr := c.Params("id")
+
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "id is not valid")
+	}
+
+	err = c.BodyParser(&cmd)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+
+	cmd.ID = id
+
+	err = cmd.Validate()
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+
+	err = s.Dependencies.UserSvc.UpdatePassword(c.Context(), &cmd)
+	if err != nil {
+		return err
+	}
+
+	return c.SendString("Updated successfully")
 }
