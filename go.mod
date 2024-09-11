@@ -10,6 +10,7 @@ require (
 	github.com/spf13/cobra v1.8.1
 	github.com/stretchr/testify v1.9.0
 	go.uber.org/zap v1.27.0
+	golang.org/x/crypto v0.14.0
 	xorm.io/xorm v1.3.9
 )
 

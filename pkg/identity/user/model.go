@@ -17,6 +17,8 @@ var (
 	ErrInvalidLastName       = errors.New("user.invalid-last-name", "Invalid last name")
 	ErrInvalidStatus         = errors.New("user.invalid-status", "Invalid status")
 	ErrInvalidEmail          = errors.New("user.invalid-email", "Invalid email")
+	ErrUserNotFound          = errors.New("user.user-not-found", "User not found")
+	ErrUserAlreadyExist      = errors.New("user.user-already-exist", "User already exist")
 )
 
 type Status int
@@ -84,6 +86,7 @@ type UpdateStatusCommand struct {
 type UpdatePasswordCommand struct {
 	ID       int64
 	Password string `json:"password"`
+	Salt     string
 }
 
 type ForgotPasswordCommand struct {
@@ -113,7 +116,10 @@ func (cmd *CreateUserCommand) Validate() error {
 	}
 
 	cmd.UUID = uuid.New().String()
-	cmd.Salt = generator.GenerateUniqueString(32)
+	cmd.Salt, err = generator.GenerateSalt()
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -153,6 +159,11 @@ func (cmd *UpdatePasswordCommand) Validate() error {
 	}
 
 	err := ValidatePassword(cmd.Password)
+	if err != nil {
+		return err
+	}
+
+	cmd.Salt, err = generator.GenerateSalt()
 	if err != nil {
 		return err
 	}

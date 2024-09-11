@@ -23,7 +23,7 @@ func SendError(c *fiber.Ctx, status int, err error) error {
 }
 
 func SuccessMessage(c *fiber.Ctx, message string) error {
-	return c.SendString(message)
+	return c.JSON(map[string]string{"message": message})
 }
 
 func Result(c *fiber.Ctx, data interface{}) error {
