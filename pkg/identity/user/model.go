@@ -1,10 +1,22 @@
 package user
 
 import (
+	"backend/pkg/infra/api/errors"
 	"backend/pkg/util/generator"
-	"errors"
+	"unicode"
 
 	"github.com/google/uuid"
+)
+
+var (
+	ErrInvalidID             = errors.New("user.invalid-id", "Invalid id")
+	ErrInvalidLoginName      = errors.New("user.invalid-login-name", "Invalid login name")
+	ErrInvalidPasswordLength = errors.New("user.invalid-password-length", "Invalid password length")
+	ErrInvalidPassword       = errors.New("user.invalid-password", "Invalid password should contain at least one uppercase letter, number and special character")
+	ErrInvalidFirstName      = errors.New("user.invalid-first-name", "Invalid first name")
+	ErrInvalidLastName       = errors.New("user.invalid-last-name", "Invalid last name")
+	ErrInvalidStatus         = errors.New("user.invalid-status", "Invalid status")
+	ErrInvalidEmail          = errors.New("user.invalid-email", "Invalid email")
 )
 
 type Status int
@@ -80,19 +92,20 @@ type ForgotPasswordCommand struct {
 
 func (cmd *CreateUserCommand) Validate() error {
 	if len(cmd.LoginName) == 0 {
-		return errors.New("login name is required")
+		return ErrInvalidLoginName
 	}
 
-	if len(cmd.Password) == 0 {
-		return errors.New("password is required")
+	err := ValidatePassword(cmd.Password)
+	if err != nil {
+		return err
 	}
 
 	if len(cmd.FirstName) == 0 {
-		return errors.New("first name is required")
+		return ErrInvalidFirstName
 	}
 
 	if len(cmd.LastName) == 0 {
-		return errors.New("last name is required")
+		return ErrInvalidLastName
 	}
 
 	if cmd.Status == 0 {
@@ -107,15 +120,15 @@ func (cmd *CreateUserCommand) Validate() error {
 
 func (cmd *UpdateUserCommand) Validate() error {
 	if cmd.ID <= 0 {
-		return errors.New("id is required")
+		return ErrInvalidID
 	}
 
 	if len(cmd.FirstName) == 0 {
-		return errors.New("first name is required")
+		return ErrInvalidFirstName
 	}
 
 	if len(cmd.LastName) == 0 {
-		return errors.New("last name is required")
+		return ErrInvalidLastName
 	}
 
 	return nil
@@ -123,7 +136,7 @@ func (cmd *UpdateUserCommand) Validate() error {
 
 func (cmd *UpdateStatusCommand) Validate() error {
 	if cmd.ID <= 0 {
-		return errors.New("id is required")
+		return ErrInvalidID
 	}
 
 	err := cmd.Status.Validate()
@@ -136,11 +149,12 @@ func (cmd *UpdateStatusCommand) Validate() error {
 
 func (cmd *UpdatePasswordCommand) Validate() error {
 	if cmd.ID <= 0 {
-		return errors.New("id is required")
+		return ErrInvalidID
 	}
 
-	if len(cmd.Password) == 0 {
-		return errors.New("password is required")
+	err := ValidatePassword(cmd.Password)
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -148,7 +162,32 @@ func (cmd *UpdatePasswordCommand) Validate() error {
 
 func (cmd *ForgotPasswordCommand) Validate() error {
 	if len(cmd.Email) == 0 {
-		return errors.New("email is required")
+		return ErrInvalidEmail
+	}
+
+	return nil
+}
+
+func ValidatePassword(password string) error {
+	if len(password) < 8 {
+		return ErrInvalidPasswordLength
+	}
+
+	var hasUppercase, hasSpecialChar, hasNumber bool
+
+	for _, char := range password {
+		switch {
+		case unicode.IsUpper(char):
+			hasUppercase = true
+		case unicode.IsNumber(char):
+			hasNumber = true
+		case unicode.IsPunct(char) || unicode.IsSymbol(char):
+			hasSpecialChar = true
+		}
+	}
+
+	if !hasUppercase || !hasSpecialChar || !hasNumber {
+		return ErrInvalidPassword
 	}
 
 	return nil
@@ -156,7 +195,7 @@ func (cmd *ForgotPasswordCommand) Validate() error {
 
 func (s Status) Validate() error {
 	if s < Pending || s > Deleted {
-		return errors.New("invalid status")
+		return ErrInvalidStatus
 	}
 
 	return nil

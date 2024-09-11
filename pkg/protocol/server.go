@@ -3,19 +3,18 @@ package protocol
 import (
 	"backend/pkg/config"
 	"backend/pkg/identity/user"
+	"backend/pkg/infra/api/routing"
 	"backend/pkg/infra/storage/db"
 	"context"
 	"fmt"
 	"time"
-
-	"github.com/gofiber/fiber/v2"
 
 	"go.uber.org/zap"
 )
 
 type Server struct {
 	Dependencies    *Dependencies
-	Router          *fiber.App
+	Router          *routing.Router
 	log             *zap.Logger
 	ShutdownTimeout time.Duration
 }
@@ -28,7 +27,7 @@ type Dependencies struct {
 }
 
 func NewServer(deps *Dependencies, cfg *config.Config) *Server {
-	r := fiber.New()
+	r := routing.NewRouter()
 	return &Server{
 		Dependencies:    deps,
 		Router:          r,
@@ -51,7 +50,7 @@ func (s *Server) Run(ctx context.Context) error {
 	addr := fmt.Sprintf(":%s", s.Dependencies.Cfg.Server.HTTPPort)
 
 	s.log.Info("Starting HTTP server", zap.String("port", s.Dependencies.Cfg.Server.HTTPPort))
-	err := s.Router.Listen(addr)
+	err := s.Router.ListenToAddress(addr)
 	if err != nil {
 		return err
 	}
@@ -59,7 +58,7 @@ func (s *Server) Run(ctx context.Context) error {
 	go func() {
 		<-stopCh
 		fmt.Println("Shutting down server...")
-		s.Router.ShutdownWithContext(ctx)
+		s.Router.Shutdown(ctx)
 	}()
 
 	return nil
