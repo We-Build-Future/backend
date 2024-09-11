@@ -4,8 +4,8 @@ import (
 	"backend/pkg/config"
 	"backend/pkg/identity/user"
 	"backend/pkg/infra/storage/db"
+	"backend/pkg/util/encrypt"
 	"context"
-	"fmt"
 	"time"
 
 	"go.uber.org/zap"
@@ -30,13 +30,18 @@ func NewService(db db.DB, cfg *config.Config) user.Service {
 func (s *service) Create(ctx context.Context, cmd *user.CreateUserCommand) error {
 	now := time.Now().Format(time.RFC3339Nano)
 
+	hashedPassword, err := encrypt.HashPassword(cmd.Password, cmd.Salt)
+	if err != nil {
+		return err
+	}
+
 	exist, err := s.store.isUserTaken(ctx, cmd.LoginName)
 	if err != nil {
 		return err
 	}
 
 	if exist {
-		return fmt.Errorf("user with login name %s already exists", cmd.LoginName)
+		return user.ErrUserAlreadyExist
 	}
 
 	err = s.store.create(ctx, &user.User{
@@ -45,7 +50,7 @@ func (s *service) Create(ctx context.Context, cmd *user.CreateUserCommand) error
 		LastName:   cmd.LastName,
 		MiddleName: cmd.MiddleName,
 		LoginName:  cmd.LoginName,
-		Password:   cmd.Password,
+		Password:   hashedPassword,
 		Status:     cmd.Status,
 		Email:      cmd.Email,
 		Salt:       cmd.Salt,
@@ -86,7 +91,20 @@ func (s *service) GetByID(ctx context.Context, id int64) (*user.User, error) {
 	}
 
 	if result == nil {
-		return nil, fmt.Errorf("user with id %d not found", id)
+		return nil, user.ErrUserNotFound
+	}
+
+	return result, nil
+}
+
+func (s *service) GetByLoginName(ctx context.Context, loginName string) (*user.User, error) {
+	result, err := s.store.getByLoginName(ctx, loginName)
+	if err != nil {
+		return nil, err
+	}
+
+	if result == nil {
+		return nil, user.ErrUserNotFound
 	}
 
 	return result, nil
@@ -95,17 +113,13 @@ func (s *service) GetByID(ctx context.Context, id int64) (*user.User, error) {
 func (s *service) Update(ctx context.Context, cmd *user.UpdateUserCommand) error {
 	now := time.Now().Format(time.RFC3339Nano)
 
-	result, err := s.store.getByID(ctx, cmd.ID)
+	result, err := s.GetByID(ctx, cmd.ID)
 	if err != nil {
 		return err
 	}
 
-	if result == nil {
-		return fmt.Errorf("user with id %d not found", cmd.ID)
-	}
-
 	err = s.store.update(ctx, &user.User{
-		ID:         cmd.ID,
+		ID:         result.ID,
 		FirstName:  cmd.FirstName,
 		LastName:   cmd.LastName,
 		MiddleName: cmd.MiddleName,
@@ -146,11 +160,19 @@ func (s *service) UpdatePassword(ctx context.Context, cmd *user.UpdatePasswordCo
 		return err
 	}
 
+	hashedPassword, err := encrypt.HashPassword(cmd.Password, exist.Salt)
+	if err != nil {
+		return err
+	}
+
 	err = s.store.updatePassword(ctx, &user.User{
 		ID:        exist.ID,
-		Password:  cmd.Password,
+		Password:  hashedPassword,
 		UpdatedAt: &now,
 	})
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

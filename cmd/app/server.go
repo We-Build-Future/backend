@@ -2,6 +2,7 @@ package app
 
 import (
 	"backend/pkg/config"
+	"backend/pkg/identity/auth/auth"
 	"backend/pkg/identity/storage"
 	"backend/pkg/identity/user/userimpl"
 	"backend/pkg/infra/registry"
@@ -33,12 +34,14 @@ func NewServer(isStandaloneMode bool) (*Server, error) {
 	}
 
 	userSvc := userimpl.NewService(postgresDB, cfg)
+	authSvc := auth.NewService(userSvc)
 
 	restServer := protocol.NewServer(&protocol.Dependencies{
 		Postgres: postgresDB,
 		Cfg:      cfg,
 
 		UserSvc: userSvc,
+		AuthSvc: authSvc,
 	}, cfg)
 
 	services := registry.NewServiceRegistry(

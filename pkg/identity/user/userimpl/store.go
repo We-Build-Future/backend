@@ -175,6 +175,42 @@ func (s *store) getByID(ctx context.Context, id int64) (*user.User, error) {
 	return &result, nil
 }
 
+func (s *store) getByLoginName(ctx context.Context, loginName string) (*user.User, error) {
+	var result user.User
+
+	rawSQL := `
+		SELECT 
+			id,
+			uuid,
+			first_name,
+			middle_name,
+			last_name,
+			login_name,
+			password,
+			status,
+			email,
+			salt,
+			created_by,
+			created_at,
+			updated_by,
+			updated_at
+		FROM "user"
+		WHERE
+			login_name = ?
+	`
+
+	err := s.db.Get(ctx, &result, rawSQL, loginName)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+
+		return nil, err
+	}
+
+	return &result, nil
+}
+
 func (s *store) update(ctx context.Context, entity *user.User) error {
 	rawSQL := `
 		UPDATE "user"
