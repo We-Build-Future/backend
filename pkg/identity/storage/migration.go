@@ -14,6 +14,7 @@ func New() *Migrations {
 func (m *Migrations) AddMigration(mg *Migrator) {
 	addMigrationLogMigrations(mg)
 	addUserMigration(mg)
+	addGenreMigration(mg)
 }
 
 func addMigrationLogMigrations(mg *Migrator) {
