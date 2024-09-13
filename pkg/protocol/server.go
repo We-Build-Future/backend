@@ -3,6 +3,7 @@ package protocol
 import (
 	"backend/pkg/config"
 	"backend/pkg/identity/auth"
+	"backend/pkg/identity/genre"
 	"backend/pkg/identity/user"
 	"backend/pkg/infra/api/routing"
 	"backend/pkg/infra/storage/db"
@@ -24,8 +25,9 @@ type Dependencies struct {
 	Postgres db.DB
 	Cfg      *config.Config
 
-	UserSvc user.Service
-	AuthSvc auth.Service
+	UserSvc  user.Service
+	AuthSvc  auth.Service
+	GenreSvc genre.Service
 }
 
 func NewServer(deps *Dependencies, cfg *config.Config) *Server {
@@ -43,6 +45,7 @@ func (s *Server) registerRoutes() {
 
 	s.NewUserHandler(r)
 	s.NewAuthHandler(r)
+	s.NewGenreHandler(r)
 }
 
 func (s *Server) Run(ctx context.Context) error {
