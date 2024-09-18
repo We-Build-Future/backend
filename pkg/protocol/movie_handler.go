@@ -1,7 +1,7 @@
 package protocol
 
 import (
-	"backend/pkg/identity/genre"
+	"backend/pkg/identity/movie"
 	"backend/pkg/infra/api/response"
 	"backend/pkg/infra/api/routing"
 	"strconv"
@@ -9,17 +9,17 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func (s *Server) NewGenreHandler(r *routing.Router) {
-	admin := r.Group("api/genre")
+func (s *Server) NewMovieHandler(r *routing.Router) {
+	admin := r.Group("api/movie")
 
-	admin.POST("/", s.createGenre)
-	admin.GET("/", s.searchGenre)
-	admin.GET("/:id", s.getGenreDetail)
-	admin.PUT("/:id", s.updateGenre)
+	admin.POST("/", s.createMovie)
+	admin.GET("/", s.searchMovie)
+	admin.GET("/:id", s.getMovieDetail)
+	admin.PUT("/:id", s.updateMovie)
 }
 
-func (s *Server) createGenre(c *fiber.Ctx) error {
-	var cmd genre.CreateGenre
+func (s *Server) createMovie(c *fiber.Ctx) error {
+	var cmd movie.CreateMovie
 
 	err := c.BodyParser(&cmd)
 	if err != nil {
@@ -31,17 +31,17 @@ func (s *Server) createGenre(c *fiber.Ctx) error {
 		return response.SendError(c, fiber.StatusBadRequest, err)
 	}
 
-	err = s.Dependencies.GenreSvc.Create(c.Context(), &cmd)
+	err = s.Dependencies.MovieSvc.Create(c.Context(), &cmd)
 	if err != nil {
 		return response.SendError(c, fiber.StatusInternalServerError, err)
 	}
 
-	return response.SuccessMessage(c, "Created successfully")
+	return response.SuccessMessage(c, "Movie created successfully")
 }
 
-func (s *Server) searchGenre(c *fiber.Ctx) error {
+func (s *Server) searchMovie(c *fiber.Ctx) error {
 	var (
-		query       genre.SearchGenreQuery
+		query       movie.SearchMovieQuery
 		queryValues = c.Queries()
 	)
 
@@ -52,7 +52,7 @@ func (s *Server) searchGenre(c *fiber.Ctx) error {
 		}
 	}
 
-	result, err := s.Dependencies.GenreSvc.Search(c.Context(), &query)
+	result, err := s.Dependencies.MovieSvc.Search(c.Context(), &query)
 	if err != nil {
 		return response.SendError(c, fiber.StatusInternalServerError, err)
 	}
@@ -60,7 +60,7 @@ func (s *Server) searchGenre(c *fiber.Ctx) error {
 	return response.Result(c, result)
 }
 
-func (s *Server) getGenreDetail(c *fiber.Ctx) error {
+func (s *Server) getMovieDetail(c *fiber.Ctx) error {
 	idStr := c.Params("id")
 
 	id, err := strconv.ParseInt(idStr, 10, 64)
@@ -68,7 +68,7 @@ func (s *Server) getGenreDetail(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "id is not valid")
 	}
 
-	result, err := s.Dependencies.GenreSvc.GetByID(c.Context(), id)
+	result, err := s.Dependencies.MovieSvc.GetByID(c.Context(), id)
 	if err != nil {
 		return response.SendError(c, fiber.StatusInternalServerError, err)
 	}
@@ -76,8 +76,8 @@ func (s *Server) getGenreDetail(c *fiber.Ctx) error {
 	return response.Result(c, result)
 }
 
-func (s *Server) updateGenre(c *fiber.Ctx) error {
-	var cmd genre.UpdateGenre
+func (s *Server) updateMovie(c *fiber.Ctx) error {
+	var cmd movie.UpdateMovie
 
 	idStr := c.Params("id")
 
@@ -97,7 +97,7 @@ func (s *Server) updateGenre(c *fiber.Ctx) error {
 		return response.SendError(c, fiber.StatusBadRequest, err)
 	}
 
-	err = s.Dependencies.GenreSvc.Update(c.Context(), &cmd)
+	err = s.Dependencies.MovieSvc.Update(c.Context(), &cmd)
 	if err != nil {
 		return response.SendError(c, fiber.StatusInternalServerError, err)
 	}

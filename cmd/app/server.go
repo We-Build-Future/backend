@@ -3,7 +3,7 @@ package app
 import (
 	"backend/pkg/config"
 	"backend/pkg/identity/auth/auth"
-	"backend/pkg/identity/genre/genreimpl"
+	"backend/pkg/identity/movie/movieimpl"
 	"backend/pkg/identity/storage"
 	"backend/pkg/identity/user/userimpl"
 	"backend/pkg/infra/registry"
@@ -36,7 +36,7 @@ func NewServer(isStandaloneMode bool) (*Server, error) {
 
 	userSvc := userimpl.NewService(postgresDB, cfg)
 	authSvc := auth.NewService(userSvc)
-	genreSvc := genreimpl.NewService(postgresDB, cfg)
+	movieSvc := movieimpl.NewService(postgresDB, cfg)
 
 	restServer := protocol.NewServer(&protocol.Dependencies{
 		Postgres: postgresDB,
@@ -44,7 +44,7 @@ func NewServer(isStandaloneMode bool) (*Server, error) {
 
 		UserSvc:  userSvc,
 		AuthSvc:  authSvc,
-		GenreSvc: genreSvc,
+		MovieSvc: movieSvc,
 	}, cfg)
 
 	services := registry.NewServiceRegistry(
